@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
+  <meta name="theme-color" content="#0a0a12">
+  <title>بث المباريات | BEIN Streams</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0a0a12;
+      --bg2: #12121e;
+      --bg3: #1a1a2e;
+      --bg4: #252540;
+      --accent: #e94560;
+      --accent2: #0f3460;
+      --green: #00b894;
+      --gold: #fdcb6e;
+      --text: #e8e8f0;
+      --text2: #8888aa;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.5);
+      --font: 'system-ui', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      --font-ar: 'system-ui', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+    }
+    html { font-size: 16px; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Typography ── */
+    h1, h2, h3 { font-weight: 700; line-height: 1.2; }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #0a0a12 0%, #1a1a2e 40%, #0f3460 80%, #e94560 100%);
+      padding: 24px 20px 20px;
+      text-align: center;
+      border-bottom: 1px solid rgba(233,69,96,0.3);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .header h1 {
+      font-size: clamp(20px, 4vw, 32px);
+      background: linear-gradient(90deg, #fff, #e94560);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+    .header p {
+      color: var(--text2);
+      font-size: clamp(11px, 2vw, 14px);
+      font-weight: 400;
+    }
+    .header .badge-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .header .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(0,184,148,0.15);
+      color: var(--green);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      backdrop-filter: blur(4px);
+    }
+
+    /* ── Container ── */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    /* ── Player Section ── */
+    .player-section {
+      background: var(--bg2);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: var(--shadow);
+    }
+    .player-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      background: #000;
+    }
+    #video {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #000;
+      outline: none;
+    }
+    .player-controls {
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      background: linear-gradient(0deg, var(--bg3), var(--bg2));
+    }
+    .player-controls .channel-name {
+      font-size: clamp(14px, 2.5vw, 18px);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .player-controls .channel-name .live-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse-dot 1.5s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    #statusBadge {
+      padding: 5px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+    #statusBadge.streaming { background: rgba(0,184,148,0.2); color: var(--green); border: 1px solid var(--green); }
+    #statusBadge.loading   { background: rgba(253,203,110,0.15); color: var(--gold); border: 1px solid var(--gold); }
+    #statusBadge.error     { background: rgba(214,48,49,0.2); color: #ff6b6b; border: 1px solid #d63031; }
+    #statusBadge.idle      { background: rgba(136,136,170,0.1); color: var(--text2); border: 1px solid rgba(136,136,170,0.2); }
+
+    /* ── Source / Quality Controls ── */
+    .source-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px 12px;
+      flex-wrap: wrap;
+      background: var(--bg2);
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+    .source-bar label {
+      font-size: 11px;
+      color: var(--text2);
+      font-weight: 500;
+    }
+    .source-select {
+      background: var(--bg4);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+      min-width: 100px;
+    }
+    .source-select:focus {
+      border-color: var(--accent);
+    }
+    .source-select option {
+      background: var(--bg3);
+    }
+    .quality-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(15,52,96,0.4);
+      color: #6eb5ff;
+      border: 1px solid rgba(110,181,255,0.2);
+    }
+
+    /* ── Control Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin: 20px 0 16px;
+      padding: 4px;
+      background: var(--bg2);
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: clamp(12px, 2vw, 14px);
+      font-weight: 600;
+      color: var(--text2);
+      transition: all 0.2s;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+    }
+    .tab:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .tab.active {
+      color: #fff;
+      background: var(--bg4);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    /* ── Channel Grid ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .channel-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(clamp(110px, 15vw, 180px), 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .channel-btn {
+      padding: 16px 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius);
+      background: var(--bg3);
+      color: var(--text2);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: inherit;
+      position: relative;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .channel-btn::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, rgba(233,69,96,0.1), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .channel-btn:hover { border-color: rgba(233,69,96,0.4); transform: translateY(-2px); }
+    .channel-btn:hover::before { opacity: 1; }
+    .channel-btn:active { transform: scale(0.97); }
+    .channel-btn.active {
+      border-color: var(--green);
+      background: rgba(0,184,148,0.1);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(0,184,148,0.1);
+    }
+    .channel-btn.active::before {
+      background: linear-gradient(135deg, rgba(0,184,148,0.15), transparent);
+      opacity: 1;
+    }
+    .channel-btn.loading {
+      border-color: var(--gold);
+      animation: glow-pulse 1s infinite;
+    }
+    @keyframes glow-pulse {
+      0%, 100% { box-shadow: 0 0 0 rgba(253,203,110,0); }
+      50% { box-shadow: 0 0 15px rgba(253,203,110,0.2); }
+    }
+    .channel-btn .ch-num {
+      font-size: clamp(20px, 3vw, 28px);
+      font-weight: 800;
+      display: block;
+      margin-bottom: 4px;
+      line-height: 1;
+    }
+    .channel-btn.active .ch-num { color: var(--green); }
+    .channel-btn .ch-label {
+      font-size: clamp(9px, 1.5vw, 11px);
+      opacity: 0.7;
+      display: block;
+    }
+    .channel-btn .ch-quality {
+      display: inline-block;
+      font-size: 9px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.06);
+      margin-top: 5px;
+    }
+
+    /* ── Match Grid ── */
+    .match-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(clamp(260px, 30vw, 340px), 1fr));
+      gap: 12px;
+    }
+    .match-card {
+      background: var(--bg3);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius);
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .match-card:hover {
+      border-color: rgba(233,69,96,0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .match-card:active { transform: scale(0.98); }
+    .match-card .teams {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .match-card .team { text-align: center; flex: 1; }
+    .match-card .team-name {
+      font-size: clamp(13px, 2vw, 15px);
+      font-weight: 600;
+      color: #fff;
+    }
+    .match-card .vs {
+      color: var(--accent);
+      font-weight: 700;
+      padding: 0 12px;
+      font-size: 14px;
+    }
+    .match-card .match-meta {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+      color: var(--text2);
+      font-size: 12px;
+    }
+    .match-card .on-channel {
+      text-align: center;
+      font-size: 11px;
+      color: var(--green);
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    /* ── Refresh Notice ── */
+    .refresh-notice {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text2);
+      margin: 16px 0 8px;
+      opacity: 0.7;
+      direction: ltr;
+    }
+
+    /* ── Guide Link ── */
+    .guide-link {
+      text-align: center;
+      margin: 16px 0 24px;
+    }
+    .guide-link a {
+      color: var(--text2);
+      font-size: 12px;
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(255,255,255,0.1);
+      transition: color 0.2s;
+    }
+    .guide-link a:hover { color: var(--text); }
+
+    /* ── TV / Large Screen Optimizations ── */
+    @media (min-width: 1280px) {
+      .container { max-width: 1400px; padding: 24px; }
+      .channel-grid { gap: 14px; }
+      .channel-btn { padding: 24px 16px; }
+      .channel-btn .ch-num { font-size: 32px; }
+      .channel-btn .ch-label { font-size: 14px; }
+      .match-card .team-name { font-size: 18px; }
+      .player-controls { padding: 18px 24px; }
+      .player-controls .channel-name { font-size: 20px; }
+      #statusBadge { font-size: 14px; padding: 6px 20px; }
+    }
+
+    /* ── Mobile Optimizations ── */
+    @media (max-width: 480px) {
+      .container { padding: 10px; }
+      .channel-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+      .channel-btn { padding: 12px 6px; }
+      .channel-btn .ch-num { font-size: 20px; }
+      .channel-btn .ch-label { font-size: 9px; }
+      .match-grid { grid-template-columns: 1fr; gap: 8px; }
+      .match-card { padding: 12px; }
+      .match-card .team-name { font-size: 13px; }
+      .source-bar { padding: 6px 12px 10px; }
+      .source-select { font-size: 11px; min-width: 80px; padding: 5px 8px; }
+      .player-controls { padding: 10px 14px; }
+      .header { padding: 16px 12px; }
+      .tabs { gap: 2px; padding: 3px; }
+      .tab { padding: 8px 4px; font-size: 12px; }
+    }
+
+    /* ── Landscape Mobile ── */
+    @media (max-height: 500px) and (orientation: landscape) {
+      .player-wrapper { padding-top: 40vh; max-height: 60vh; }
+      .header { padding: 8px 12px; }
+      .header h1 { font-size: 16px; }
+      .channel-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; }
+      .channel-btn { padding: 8px 4px; }
+      .channel-btn .ch-num { font-size: 16px; }
+    }
+
+    /* TV screens (720p/1080p) */
+    @media (min-width: 1920px) {
+      html { font-size: 20px; }
+      .container { max-width: 1800px; padding: 32px; }
+      .channel-grid { grid-template-columns: repeat(8, 1fr); gap: 16px; }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent2); }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚽ بث المباريات مباشر</h1>
+  <p>BEIN SPORTS — Streaming via man1ted.com</p>
+  <div class="badge-row">
+    <span class="badge">🟢 12 قناة</span>
+    <span class="badge">🔐 مشفر تلقائياً</span>
+    <span class="badge">📱 يدعم الجوال والتلفاز</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Player -->
+  <div class="player-section">
+    <div class="player-wrapper">
+      <video id="video" controls autoplay playsinline preload="auto"></video>
+    </div>
+    <div class="player-controls">
+      <div class="channel-name">
+        <span class="live-dot" id="liveDot" style="opacity:0"></span>
+        <span id="currentChannel">اختر قناة</span>
+      </div>
+      <div id="statusBadge" class="status-badge">⏸ متوقف</div>
+    </div>
+    <div class="source-bar">
+      <label>📡 المصدر:</label>
+      <select class="source-select" id="sourceSelect">
+        <option value="primary">رئيسي (BUZ)</option>
+        <option value="backup">احتياطي (VACO)</option>
+      </select>
+      <span class="quality-badge" id="qualityBadge">● HD</span>
+      <span id="streamInfo" style="font-size:11px;color:var(--text2);margin-right:auto;direction:ltr"></span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="channels">📺 القنوات</button>
+    <button class="tab" data-tab="matches">⚽ المباريات</button>
+  </div>
+
+  <!-- Channels Panel -->
+  <div class="panel active" id="panelChannels">
+    <div class="channel-grid" id="channelGrid"></div>
+  </div>
+
+  <!-- Matches Panel -->
+  <div class="panel" id="panelMatches">
+    <div class="match-grid" id="matchGrid"></div>
+  </div>
+
+  <div class="refresh-notice" id="refreshNotice"></div>
+</div>
+
+<script>
+// ── Channels ──
+const CHANNELS = {
+  "BEIN Sports 1": { api: "https://man1ted.com/get.php?ch=beee1&q=720", quality: "480p", icon: "1" },
+  "BEIN Sports 2": { api: "https://man1ted.com/get.php?ch=beee2&q=720", quality: "480p", icon: "2" },
+  "BEIN Sports 3": { api: "https://man1ted.com/get.php?ch=beee3&q=720", quality: "480p", icon: "3" },
+  "BEIN Sports 4": { api: "https://man1ted.com/get.php?ch=beee4&q=720", quality: "480p", icon: "4" },
+  "BEIN Sports 5": { api: "https://man1ted.com/get.php?ch=beee5&q=720", quality: "480p", icon: "5" },
+  "BEIN Sports 6": { api: "https://man1ted.com/get.php?ch=beee6&q=720", quality: "480p", icon: "6" },
+  "BEIN MAX 1":    { api: "https://man1ted.com/get.php?ch=beemax1&q=720", quality: "480p", icon: "M1" },
+  "BEIN MAX 2":    { api: "https://man1ted.com/get.php?ch=beemax2&q=720", quality: "480p", icon: "M2" },
+  "BEIN MAX 3":    { api: "https://man1ted.com/get.php?ch=beemax3&q=720", quality: "480p", icon: "M3" },
+  "BEIN MAX 4":    { api: "https://man1ted.com/get.php?ch=beemax4&q=720", quality: "480p", icon: "M4" },
+  "BEIN MAX 5":    { api: "https://man1ted.com/get.php?ch=beemax5&q=720", quality: "480p", icon: "M5" },
+  "BEIN MAX 6":    { api: "https://man1ted.com/get.php?ch=beemax6&q=720", quality: "480p", icon: "M6" }
+};
+
+const MATCHES = [
+  ["الجزائر", "الأرجنتين", "01:00", "2026-06-17", "BEIN MAX 1/3"],
+  ["الأردن", "النمسا", "04:00", "2026-06-17", "BEIN MAX 2/4"],
+  ["الكونغو الديمقراطية", "البرتغال", "17:00", "2026-06-17", "BEIN MAX 1"],
+  ["كرواتيا", "إنجلترا", "20:00", "2026-06-17", "BEIN MAX 2"],
+  ["بنما", "غانا", "23:00", "2026-06-17", "BEIN MAX 1"],
+  ["كولومبيا", "أوزبكستان", "02:00", "2026-06-18", "BEIN MAX 2"],
+  ["نيوزيلندا", "إيران", "01:00", "2026-06-16", "BEIN MAX 2/4"],
+  ["السنغال", "فرنسا", "19:05", "2026-06-16", "BEIN MAX 1/3"],
+  ["النرويج", "العراق", "22:00", "2026-06-16", "BEIN MAX 2/4"]
+];
+
+// Quality description per channel
+const QUALITY_MAP = {
+  "BEIN Sports 1": "480p (source limited)",
+  "BEIN Sports 2": "480p (source limited)",
+  "BEIN Sports 3": "480p (source limited)",
+  "BEIN Sports 4": "480p (source limited)",
+  "BEIN Sports 5": "480p (source limited)",
+  "BEIN Sports 6": "480p (source limited)",
+  "BEIN MAX 1": "480p (source limited)",
+  "BEIN MAX 2": "480p (source limited)",
+  "BEIN MAX 3": "480p (source limited)",
+  "BEIN MAX 4": "480p (source limited)",
+  "BEIN MAX 5": "480p (source limited)",
+  "BEIN MAX 6": "480p (source limited)"
+};
+
+let hls = null;
+let refreshTimer = null;
+let currentChannel = null;
+let currentStreamUrl = null;
+const channelNames = Object.keys(CHANNELS);
+
+// ── UI Helpers ──
+function setStatus(text, type) {
+  const badge = document.getElementById('statusBadge');
+  badge.textContent = text;
+  badge.className = 'status-badge';
+  if (type) badge.classList.add(type);
+
+  const dot = document.getElementById('liveDot');
+  dot.style.opacity = (type === 'streaming') ? '1' : '0';
+}
+
+function updateQualityBadge(chName) {
+  const q = QUALITY_MAP[chName] || "480p";
+  document.getElementById('qualityBadge').textContent = '● ' + q;
+}
+
+function updateStreamInfo(text) {
+  document.getElementById('streamInfo').textContent = text || '';
+}
+
+// ── API Fetch ──
+const PROXY_PREFIX = '/stream/load?target=';
+
+async function fetchStreamUrl(chName) {
+  const ch = CHANNELS[chName];
+  if (!ch) return null;
+  try {
+    const resp = await fetch(ch.api);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    if (data.ok && data.stream_url) {
+      return { url: PROXY_PREFIX + encodeURIComponent(data.stream_url), expires: data.expires_at, raw: data.stream_url };
+    }
+    return null;
+  } catch(e) {
+    console.error('API error:', e);
+    return null;
+  }
+}
+
+// ── Play Channel ──
+async function playChannel(chName) {
+  setStatus('⏳ جاري التحميل...', 'loading');
+  document.getElementById('currentChannel').textContent = chName;
+  updateQualityBadge(chName);
+  updateStreamInfo('');
+
+  document.querySelectorAll('.channel-btn').forEach(btn => {
+    btn.classList.remove('active', 'loading');
+    if (btn.dataset.channel === chName) btn.classList.add('loading');
+  });
+
+  const result = await fetchStreamUrl(chName);
+  if (!result) {
+    setStatus('🔴 خطأ في الاتصال', 'error');
+    document.querySelectorAll('.channel-btn').forEach(btn => {
+      if (btn.dataset.channel === chName) btn.classList.remove('loading');
+    });
+    return;
+  }
+
+  currentChannel = chName;
+  currentStreamUrl = result.url;
+
+  document.querySelectorAll('.channel-btn').forEach(btn => {
+    btn.classList.remove('loading');
+    btn.classList.toggle('active', btn.dataset.channel === chName);
+  });
+
+  const video = document.getElementById('video');
+  if (hls) { hls.destroy(); hls = null; }
+
+  const sourceMode = document.getElementById('sourceSelect').value;
+  let playUrl = result.url;
+
+  if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = playUrl;
+    video.addEventListener('loadedmetadata', () => {
+      setStatus('🟢 مباشر', 'streaming');
+      updateStreamInfo('⚡ ' + (QUALITY_MAP[chName] || 'HD'));
+      video.play().catch(() => {});
+    }, { once: true });
+  } else if (Hls.isSupported()) {
+    hls = new Hls({ enableWorker: true, lowLatencyMode: true, maxBufferLength: 30 });
+    hls.loadSource(playUrl);
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED, (e, data) => {
+      setStatus('🟢 مباشر', 'streaming');
+      const level = hls.levels && hls.levels[0];
+      if (level) {
+        updateStreamInfo(`⚡ ${level.width}x${level.height} @ ${Math.round(level.bitrate/1000)}kbps`);
+      } else {
+        updateStreamInfo('⚡ ' + (QUALITY_MAP[chName] || 'HD'));
+      }
+      video.play().catch(() => {});
+    });
+    hls.on(Hls.Events.LEVEL_SWITCHED, (e, data) => {
+      const level = hls.levels[data.level];
+      if (level) {
+        updateStreamInfo(`⚡ ${level.width}x${level.height} @ ${Math.round(level.bitrate/1000)}kbps`);
+      }
+    });
+    hls.on(Hls.Events.ERROR, (e, data) => {
+      if (data.fatal) {
+        setStatus('🔴 خطأ في البث', 'error');
+        scheduleRefresh(5);
+      }
+    });
+  } else {
+    setStatus('❌ المتصفح لا يدعم HLS', 'error');
+  }
+
+  scheduleRefresh(300);
+  document.getElementById('refreshNotice').textContent =
+    `🔑 يتم تجديد الرابط كل 10 دقائق • آخر تحديث: ${new Date().toLocaleTimeString('ar-SA')}`;
+}
+
+function scheduleRefresh(seconds) {
+  if (refreshTimer) clearTimeout(refreshTimer);
+  if (seconds > 0 && currentChannel) {
+    refreshTimer = setTimeout(() => {
+      if (currentChannel) playChannel(currentChannel);
+    }, seconds * 1000);
+  }
+}
+
+// ── Source Switch ──
+document.getElementById('sourceSelect').addEventListener('change', function() {
+  if (currentChannel) playChannel(currentChannel);
+});
+
+// ── Channel Grid ──
+function initChannels() {
+  const grid = document.getElementById('channelGrid');
+  grid.innerHTML = '';
+  const sorted = [...channelNames].sort((a, b) => {
+    const na = parseInt(a.match(/MAX (\d+)/) || a.match(/\d+/) || 0) || 999;
+    const nb = parseInt(b.match(/MAX (\d+)/) || b.match(/\d+/) || 0) || 999;
+    const isMaxA = a.includes('MAX') ? 1 : 0;
+    const isMaxB = b.includes('MAX') ? 1 : 0;
+    if (isMaxA !== isMaxB) return isMaxA - isMaxB;
+    return na - nb;
+  });
+  sorted.forEach(name => {
+    const btn = document.createElement('button');
+    btn.className = 'channel-btn';
+    btn.dataset.channel = name;
+    const ch = CHANNELS[name];
+    const icon = ch ? ch.icon : '●';
+    const quality = ch ? ch.quality : 'HD';
+    btn.innerHTML = `
+      <span class="ch-num">${icon}</span>
+      <span class="ch-label">${name.replace('BEIN ', '').replace('Sports ', 'S')}</span>
+      <span class="ch-quality">${quality}</span>
+    `;
+    btn.onclick = () => playChannel(name);
+    grid.appendChild(btn);
+  });
+}
+
+// ── Match Grid ──
+function initMatches() {
+  const grid = document.getElementById('matchGrid');
+  grid.innerHTML = '';
+  MATCHES.forEach(([team1, team2, time, date, channel]) => {
+    const card = document.createElement('div');
+    card.className = 'match-card';
+    card.innerHTML = `
+      <div class="teams">
+        <div class="team"><div class="team-name">${team1}</div></div>
+        <div class="vs">⚔️</div>
+        <div class="team"><div class="team-name">${team2}</div></div>
+      </div>
+      <div class="match-meta">
+        <span>📅 ${date}</span>
+        <span>⏰ ${time}</span>
+      </div>
+      <div class="on-channel">📡 على ${channel}</div>
+    `;
+    card.onclick = () => {
+      // Match to channel
+      if (channel.includes('/')) {
+        const chNames = channel.split('/').map(s => s.trim());
+        for (const cn of chNames) {
+          for (const [chName] of Object.entries(CHANNELS)) {
+            if (chName.includes(cn)) { playChannel(chName); return; }
+          }
+        }
+      }
+      for (const [chName] of Object.entries(CHANNELS)) {
+        if (channel.includes(chName)) { playChannel(chName); return; }
+      }
+      const m = channel.match(/MAX (\d+)/);
+      if (m) { const cn = `BEIN MAX ${m[1]}`; if (CHANNELS[cn]) { playChannel(cn); return; } }
+      playChannel("BEIN Sports 1");
+    };
+    grid.appendChild(card);
+  });
+}
+
+// ── Tabs ──
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('panel' + this.dataset.tab.charAt(0).toUpperCase() + this.dataset.tab.slice(1)).classList.add('active');
+  });
+});
+
+// ── Init ──
+initChannels();
+initMatches();
+setStatus('⏸ اختر قناة للمشاهدة');
+</script>
+</body>
+</html>
