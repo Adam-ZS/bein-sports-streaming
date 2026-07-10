@@ -1,86 +1,47 @@
 # BEIN Sports Streaming
 
-Free BEIN Sports streaming proxy — watch all 12 BEIN channels (BEIN Sports 1-6 & BEIN Sports MAX 1-6) via a local proxy or Vercel deployment.
+|Free BEIN Sports streaming proxy — 12 channels with quality options, auto-updating matches table, and optimized HLS streaming. Works on mobile, TV, and desktop.
 
 ## Features
 
 - **12 BEIN channels** — BEIN Sports 1-6 + BEIN Sports MAX 1-6
-- **Vercel deployment** — public URL, serverless functions
-- **Local proxy** — Python server with BuzCup User-Agent injection
-- **Mobile & TV friendly UI** — responsive dark theme
-- **VLC playlist** — `.m3u` for desktop playback
-- **Multi-source** — man1ted.com API (primary)
+- **Quality options** — 360p / 480p / 720p / 1080p selector
+- **Live matches table** — auto-updated via ESPN API, shows today's football schedule with BEIN channel mapping
+- **Lag-optimized** — tuned HLS.js buffer (60s), smooth token refresh, auto-recovery on errors
+- **Vercel deployment** — public URL, serverless Python functions
+- **Mobile & TV friendly** — responsive dark theme, touch-optimized
+- **Live/ended tags** — matches show 🔴LIVE or ✅انتهت badges
+- **Click-to-watch** — tap any match card to switch to its BEIN channel
 
 ## Quick Start
 
-### Option 1: Vercel (recommended)
+Visit: https://bein-sports-streaming.vercel.app
 
-```bash
-vercel deploy
-```
-
-Or just visit https://adam-bein.vercel.app
-
-### Option 2: Local Proxy
+### Local Proxy (for lower latency)
 
 ```bash
 python3 bein-server-v6.py
 # → http://localhost:8000
 ```
 
-### Option 3: VLC
-
-Open `bein-sports-vlc.m3u` in VLC.
-
 ## API Endpoints
 
 | Endpoint | Description |
 |---|---|
-| `/` | Main streaming UI |
-| `/api/channel?ch=CHANNEL` | Get stream token for channel |
-| `/api/proxy?url=URL` | Proxy M3U8/TS segments |
+| `/` | Main streaming UI (12 channels + matches + quality selector) |
+| `/api/channel?ch=CHANNEL&q=QUALITY` | Get stream token (q=360/480/720/1080) |
+| `/api/proxy?url=URL` | Proxy M3U8/TS segments with BuzCup UA |
+| `/api/matches` | Live football schedule with BEIN channel mapping |
 
 ### Channel IDs
 
-- `beee1` — BEIN Sports 1
-- `beee2` — BEIN Sports 2
-- `beee3` — BEIN Sports 3
-- `beee4` — BEIN Sports 4
-- `beee5` — BEIN Sports 5
-- `beee6` — BEIN Sports 6
-- `bemax1` — BEIN Sports MAX 1
-- `bemax2` — BEIN Sports MAX 2
-- `bemax3` — BEIN Sports MAX 3
-- `bemax4` — BEIN Sports MAX 4
-- `bemax5` — BEIN Sports MAX 5
-- `bemax6` — BEIN Sports MAX 6
+- `beee1-6` — BEIN Sports 1-6
+- `bemax1-6` — BEIN Sports MAX 1-6
 
-## Architecture
+## What's New (v2)
 
-```
-Browser ──→ Vercel ──→ man1ted.com API ──→ BEIN stream source
-               │
-          [BuzCup/2.0 User-Agent]
-          [Stream proxy + URL rewriting]
-```
-
-## Tech Stack
-
-- **Frontend:** HTML/CSS/JS (dark theme, mobile-first)
-- **Backend:** Python serverless functions (Vercel)
-- **Source:** man1ted.com API with BuzCup credentials
-- **Proxy:** HLS segment proxying with playlist rewriting
-
-## Reverse Engineering Guide
-
-See `bein-reverse-engineering-guide.md` for the full technical breakdown of how the streams were extracted from the Buz Cup Android app.
-
-## Notes
-
-- Stream quality is source-limited to ~480p (500 Kbps)
-- Quality badges show honest labels
-- All traffic routes through Tor for OPSEC
-
-## License
-
-For educational purposes only.
+- **Quality selector** — different &q= parameter values for source quality negotiation
+- **Dynamic matches** — table fetches from ESPN API on load, auto-refreshes every 10min
+- **Smooth playback** — HLS.js tuned with 60s buffer, disabled lowLatencyMode (causes stutter), auto-reconnect on errors
+- **Token refresh** — pre-loads new stream URL before 600s expiry, no interruption
+- **Cold start warm-up** — pre-pings API on page load to reduce first-play latency
