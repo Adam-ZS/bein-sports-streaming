@@ -1694,14 +1694,26 @@ function renderMatches(filterLeague = '') {
 
   // Build league filter
   matchesData.forEach(m => { if (m.league) leagues.add(m.league); });
+
+  // Count World Cup matches
+  const wcCount = matchesData.filter(m => m.priority === 'worldcup').length;
+
   const filterHtml = ['<span class="league-chip active" data-league="" onclick="filterLeague(this)">الكل</span>'];
+
+  // If World Cup matches exist, add a special golden World Cup chip first
+  if (wcCount > 0) {
+  filterHtml.push(`<span class="league-chip" data-league="worldcup" onclick="filterLeague(this)" style="background:rgba(240,192,64,0.15);color:var(--gold);border-color:rgba(240,192,64,0.3);">🏆 كأس العالم (${wcCount})</span>`);
+  }
+
   leagues.forEach(l => {
-    filterHtml.push(`<span class="league-chip" data-league="${l}" onclick="filterLeague(this)">${l}</span>`);
+  filterHtml.push(`<span class="league-chip" data-league="${l}" onclick="filterLeague(this)">${l}</span>`);
   });
   document.getElementById('leagueFilter').innerHTML = filterHtml.join('');
 
   const filtered = filterLeague
-    ? matchesData.filter(m => m.league === filterLeague)
+    ? (filterLeague === 'worldcup'
+      ? matchesData.filter(m => m.priority === 'worldcup')
+      : matchesData.filter(m => m.league === filterLeague))
     : matchesData;
 
   if (!filtered.length) {
@@ -1728,6 +1740,8 @@ function renderMatches(filterLeague = '') {
     let countdownHtml = '';
     if (isLive) tagHtml = '<span class="tag live-tag">🔴 LIVE</span>';
     else if (isPast) tagHtml = '<span class="tag past-tag">✅ انتهت</span>';
+    else if (isPast && m.priority === 'worldcup') tagHtml = '<span class="tag past-tag">🏆 كأس العالم</span>';
+    else if (upcoming && m.priority === 'worldcup') tagHtml = '<span class="tag upcoming-tag" style="background:rgba(240,192,64,0.2);color:var(--gold);">🏆 كأس العالم</span>';
     else if (upcoming && diffMin > 0 && diffMin < 180) tagHtml = `<span class="tag upcoming-tag">⏰ بعد ${diffMin} د</span>`;
     else if (upcoming) tagHtml = '<span class="tag upcoming-tag">📅 قادمة</span>';
 

@@ -185,27 +185,56 @@ def generate_fallback_matches() -> list:
 def app(environ, start_response):
     """WSGI handler for Vercel."""
     today = (datetime.now(timezone.utc) + timedelta(hours=3)).strftime("%Y%m%d")
+    tomorrow = (datetime.now(timezone.utc) + timedelta(hours=27)).strftime("%Y%m%d")
     all_matches = []
 
-    # Try ESPN API for major leagues
-    leagues = list(LEAGUE_CHANNELS.keys())
-    import random
-    random.shuffle(leagues)  # Avoid rate limiting patterns
+    # ── 1. FIFA World Cup is ALWAYS fetched first — highest priority ──
+    wc_matches = fetch_espn("fifa.world", today)
+    if not wc_matches:
+        wc_matches = fetch_espn("fifa.world", tomorrow)
+    wcq_matches = fetch_espn("fifa.worldq", today)
+    all_matches.extend(wc_matches)
+    all_matches.extend(wcq_matches)
 
-    for league in leagues[:5]:  # Fetch top 5 leagues
+    # ── 2. UEFA Champions League (always second priority) ──
+    ucl_matches = fetch_espn("uefa.champions", today)
+    all_matches.extend(ucl_matches)
+
+    # ── 3. Top domestic leagues (shuffled for variety) ──
+    domestic = ["eng.1", "esp.1", "ita.1", "ger.1", "fra.1", "sau.1", "tur.1"]
+    import random
+    random.shuffle(domestic)
+    for league in domestic[:3]:
         matches = fetch_espn(league, today)
         all_matches.extend(matches)
-        if len(all_matches) >= 5:
-            break
 
-    # If no matches from API, use fallback
+    # ── 4. If still empty, try secondary leagues ──
+    if len(all_matches) < 3:
+        secondary = ["ned.1", "por.1", "eng.2", "uefa.europa"]
+        random.shuffle(secondary)
+        for league in secondary[:2]:
+            matches = fetch_espn(league, today)
+            all_matches.extend(matches)
+
+    # ── 5. If no matches from API at all, use fallback ──
     if not all_matches:
         all_matches = generate_fallback_matches()
     else:
         all_matches = assign_bein_channel(all_matches)
 
-    # Sort: live matches first, then by time
-    all_matches.sort(key=lambda m: (0 if m.get("live") else 1, m.get("time", "00:00")))
+    # Mark FIFA World Cup matches with priority flag
+    for m in all_matches:
+        if m.get("league_slug") == "fifa.world":
+            m["priority"] = "worldcup"
+        elif m.get("league_slug") == "fifa.worldq":
+            m["priority"] = "worldcup"
+
+    # Sort: live first, then World Cup, then by time
+    all_matches.sort(key=lambda m: (
+        0 if m.get("live") else 1,
+        0 if m.get("priority") == "worldcup" else 1,
+        m.get("time", "99:99")
+    ))
 
     body = json.dumps({"matches": all_matches, "updated": datetime.now().isoformat()})
     start_response("200 OK", [
