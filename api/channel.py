@@ -8,11 +8,12 @@ ssl_ctx.verify_mode = ssl.CERT_NONE
 def app(environ, start_response):
     qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
     ch = qs.get("ch", [""])[0]
+    q = qs.get("q", ["480"])[0]
     if not ch:
         start_response("400 Bad Request", [("Content-Type", "application/json")])
         return [json.dumps({"ok": False, "error": "Missing ch param"}).encode()]
     
-    url = f"https://man1ted.com/get.php?ch={ch}"
+    url = f"https://man1ted.com/get.php?ch={ch}&q={q}"
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     try:
         resp = urllib.request.urlopen(req, context=ssl_ctx, timeout=15)
