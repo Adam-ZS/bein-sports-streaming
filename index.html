@@ -1169,7 +1169,7 @@
       <div class="header-badges">
         <span class="badge badge-green"><span class="live-pulse"></span> 12 قناة مباشرة</span>
         <span class="badge badge-red">⚡ HD</span>
-        <span class="badge badge-blue" id="sourceCount">📡 2 مصادر</span>
+        <span class="badge badge-blue" id="sourceCount">📡 4 مصادر</span>
       </div>
 
       <div class="clock" id="clock">--:--:--</div>
@@ -1203,8 +1203,10 @@
       <div class="toolbar">
         <label>📡 المصدر</label>
         <select class="toolbar-select" id="sourceSelect">
-          <option value="primary">رئيسي (BUZ)</option>
-          <option value="alt">بديل (VACO)</option>
+          <option value="primary">رئيسي (man1ted)</option>
+          <option value="vaco">احتياطي (VACO)</option>
+          <option value="yallahd">إضافي (YallaHD)</option>
+          <option value="amagi">مجاني (Amagi US)</option>
         </select>
 
         <label>🎚 الجودة</label>
@@ -1347,6 +1349,39 @@ const CHANNEL_NAMES = Object.keys(CHANNELS);
 const QUALITY_LABELS = { "360": "360p", "480": "480p", "720": "720p HD", "1080": "1080p FHD" };
 const PROXY_PREFIX = '/api/proxy?url=';
 
+// ─── ALTERNATIVE SOURCE URLS ───
+const SOURCE_URLS = {
+  vaco: {
+    1: "https://pub-b6a2e12c8294473a88fb9c317217dbbc.r2.dev/Bein1.m3u8",
+    2: "https://pub-b6a2e12c8294473a88fb9c317217dbbc.r2.dev/Bein2.m3u8",
+    3: "https://pub-b6a2e12c8294473a88fb9c317217dbbc.r2.dev/Bein3.m3u8",
+    4: "https://pub-b6a2e12c8294473a88fb9c317217dbbc.r2.dev/Bein4.m3u8",
+    5: "https://pub-b6a2e12c8294473a88fb9c317217dbbc.r2.dev/Bein5.m3u8",
+    6: "https://pub-b6a2e12c8294473a88fb9c317217dbbc.r2.dev/Bein6.m3u8",
+    7: "https://pub-b6a2e12c8294473a88fb9c317217dbbc.r2.dev/Bein7.m3u8",
+    8: "https://pub-b6a2e12c8294473a88fb9c317217dbbc.r2.dev/Bein8.m3u8",
+    9: "https://pub-b6a2e12c8294473a88fb9c317217dbbc.r2.dev/Bein9.m3u8"
+  },
+  yallahd: {
+    beINAR: "https://tv.fan7live.workers.dev/live/beINAR/index.m3u8",
+    beINAR3: "https://tv.fan7live.workers.dev/live/beINAR3/index.m3u8",
+    beINAR6: "https://tv.fan7live.workers.dev/live/beINAR6/index.m3u8"
+  },
+  amagi: {
+    "720p": "https://bein-esp-xumo.amagi.tv/playlistR720P.m3u8",
+    "1080p": "https://bein-esp-xumo.amagi.tv/playlistR1080p.m3u8",
+    multi: "https://bein-xtra-bein.amagi.tv/playlist.m3u8",
+    espanol: "https://dc1644a9jazgj.cloudfront.net/beIN_Sports_Xtra_Espanol.m3u8"
+  }
+};
+
+const CHANNEL_TO_VACO = {
+  "BEIN Sports 1": 1, "BEIN Sports 2": 2, "BEIN Sports 3": 3,
+  "BEIN Sports 4": 4, "BEIN Sports 5": 5, "BEIN Sports 6": 6,
+  "BEIN MAX 1": 7, "BEIN MAX 2": 8, "BEIN MAX 3": 9,
+  "BEIN MAX 4": 4, "BEIN MAX 5": 5, "BEIN MAX 6": 6
+};
+
 // ─── STATE ───
 let hls = null;
 let refreshTimer = null;
@@ -1446,20 +1481,39 @@ async function fetchStreamUrl(chName, quality) {
   const ch = CHANNELS[chName];
   if (!ch) return null;
   const q = quality || '480';
+  const source = document.getElementById('sourceSelect').value;
+
   try {
-    const resp = await fetch(`/api/channel?ch=${ch.id}&q=${q}`);
-    if (!resp.ok) return null;
-    const data = await resp.json();
-    if (data.ok && data.stream_url) {
-      return {
-        url: PROXY_PREFIX + encodeURIComponent(data.stream_url),
-        expires: data.expires_at,
-        raw: data.stream_url
-      };
+    if (source === 'primary') {
+      // man1ted.com via Vercel API
+      const resp = await fetch(`/api/channel?ch=${ch.id}&q=${q}`);
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      if (data.ok && data.stream_url) {
+        return { url: PROXY_PREFIX + encodeURIComponent(data.stream_url), expires: data.expires_at, raw: data.stream_url };
+      }
+    } else if (source === 'vaco') {
+      // VACO Cloudflare R2 — direct M3U8 URL
+      const vIdx = CHANNEL_TO_VACO[chName];
+      if (vIdx && SOURCE_URLS.vaco[vIdx]) {
+        return { url: SOURCE_URLS.vaco[vIdx], expires: 0, raw: SOURCE_URLS.vaco[vIdx] };
+      }
+    } else if (source === 'yallahd') {
+      // YallaHD Workers — pick closest channel
+      const yKey = chName.includes('MAX') ? 'beINAR6' : (parseInt(ch.icon) <= 3 ? 'beINAR' : 'beINAR3');
+      if (SOURCE_URLS.yallahd[yKey]) {
+        return { url: SOURCE_URLS.yallahd[yKey], expires: 0, raw: SOURCE_URLS.yallahd[yKey] };
+      }
+    } else if (source === 'amagi') {
+      // Amagi US free — pick quality
+      const aKey = parseInt(q) >= 720 ? '1080p' : '720p';
+      if (SOURCE_URLS.amagi[aKey]) {
+        return { url: SOURCE_URLS.amagi[aKey], expires: 0, raw: SOURCE_URLS.amagi[aKey] };
+      }
     }
     return null;
   } catch(e) {
-    console.error('API error:', e);
+    console.error('Source error:', source, e);
     return null;
   }
 }
@@ -1593,10 +1647,15 @@ async function playChannel(chName, isRefresh = false, fromRecent = false) {
     setStatus('❌ المتصفح لا يدعم HLS', 'error');
   }
 
-  // Schedule refresh before token expiry (600s from server, refresh at 480s)
-  scheduleRefresh(480);
-  document.getElementById('refreshNotice').textContent =
-    `🔑 آخر تحديث: ${new Date().toLocaleTimeString('ar-SA')} • تجديد تلقائي`;
+  // Schedule refresh for token-based sources (man1ted), skip for direct URLs
+  if (document.getElementById('sourceSelect').value === 'primary') {
+    scheduleRefresh(480);
+    document.getElementById('refreshNotice').textContent =
+      `🔑 آخر تحديث: ${new Date().toLocaleTimeString('ar-SA')} • تجديد تلقائي`;
+  } else {
+    document.getElementById('refreshNotice').textContent =
+      `📡 المصدر: ${document.getElementById('sourceSelect').value} • لا يحتاج تجديد`;
+  }
 }
 
 function scheduleRefresh(seconds) {

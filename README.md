@@ -33,6 +33,15 @@ python3 bein-server-v6.py
 | `/api/proxy?url=URL` | Proxy M3U8/TS segments with BuzCup UA |
 | `/api/matches` | Live football schedule with BEIN channel mapping |
 
+### Sources
+
+| Source | Description | Qualities |
+|---|---|---|
+| **man1ted** (رئيسي) | Primary source via API with BuzCup UA | 360p / 480p / 720p / 1080p |
+| **VACO** (احتياطي) | Cloudflare R2 direct M3U8 (no proxy needed) | Single quality |
+| **YallaHD** (إضافي) | Cloudflare Workers hosted Arabic BEIN | Single quality |
+| **Amagi** (مجاني) | US BEIN XTRA free ad-supported | 720p / 1080p |
+
 ### Channel IDs
 
 - `beee1-6` — BEIN Sports 1-6
