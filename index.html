@@ -1217,6 +1217,7 @@
 
         <span class="quality-badge" id="qualityBadge">● 480p</span>
         <span id="streamInfo"></span>
+        <span id="qualityNote" style="font-size:9px;color:var(--text-muted);max-width:120px;display:none;"></span>
 
         <button class="toolbar-btn" id="settingsBtn" title="الإعدادات" style="margin-right:auto;">⚙️</button>
       </div>
@@ -1549,9 +1550,23 @@ async function playChannel(chName, isRefresh = false, fromRecent = false) {
       setStatus('🟢 مباشر', 'streaming');
       const level = hls.levels && hls.levels[hls.currentLevel >= 0 ? hls.currentLevel : 0];
       if (level) {
+        const detectedHeight = level.height;
+        const selectedQ = parseInt(quality);
         updateStreamInfo(`⚡ ${level.width}x${level.height} @ ${Math.round(level.bitrate/1000)}kbps`);
+        // If source quality differs from selected, show a note
+        const note = document.getElementById('qualityNote');
+        if (detectedHeight && Math.abs(detectedHeight - selectedQ) > 50) {
+          note.textContent = `⚠️ المصدر يبث بجودة ${detectedHeight}p (الاختيار: ${quality}p)`;
+          note.style.display = 'inline';
+          // Update badge to actual detected quality
+          updateQualityBadge(`${detectedHeight}p`);
+        } else {
+          note.style.display = 'none';
+          updateQualityBadge(QUALITY_LABELS[quality] || '480p');
+        }
       } else {
         updateStreamInfo('⚡ ' + (QUALITY_LABELS[quality] || 'HD'));
+        document.getElementById('qualityNote').style.display = 'none';
       }
       if (autoPlay) video.play().catch(() => {});
     });
