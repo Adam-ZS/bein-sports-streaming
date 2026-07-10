@@ -36,7 +36,7 @@ python3 bein-server-v6.py
 ### Channel IDs
 
 - `beee1-6` — BEIN Sports 1-6
-- `bemax1-6` — BEIN Sports MAX 1-6
+- `beemax1-6` — BEIN MAX 1-6
 
 ## What's New (v2)
 

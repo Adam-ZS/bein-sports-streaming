@@ -38,12 +38,12 @@ LEAGUE_CHANNELS = {
     "ger.1": {"primary": "beee5", "name": "BEIN Sports 5"},
     "fra.1": {"primary": "beee6", "name": "BEIN Sports 6"},
     # Secondary leagues / extra matches → BEIN MAX
-    "ned.1": {"primary": "bemax1", "name": "BEIN MAX 1"},
-    "por.1": {"primary": "bemax2", "name": "BEIN MAX 2"},
-    "tur.1": {"primary": "bemax3", "name": "BEIN MAX 3"},
-    "sau.1": {"primary": "bemax1", "name": "BEIN MAX 1"},
-    "caf.cc": {"primary": "bemax4", "name": "BEIN MAX 4"},
-    "caf.cl": {"primary": "bemax5", "name": "BEIN MAX 5"},
+    "ned.1": {"primary": "beemax1", "name": "BEIN MAX 1"},
+    "por.1": {"primary": "beemax2", "name": "BEIN MAX 2"},
+    "tur.1": {"primary": "beemax3", "name": "BEIN MAX 3"},
+    "sau.1": {"primary": "beemax1", "name": "BEIN MAX 1"},
+    "caf.cc": {"primary": "beemax4", "name": "BEIN MAX 4"},
+    "caf.cl": {"primary": "beemax5", "name": "BEIN MAX 5"},
 }
 
 # Competition name mapping (ESPN slug → display name)
@@ -128,7 +128,7 @@ def assign_bein_channel(matches: list) -> list:
         else:
             # Subsequent matches: rotate through BEIN MAX channels
             max_num = min(count, 6)
-            m["channel_id"] = f"bemax{max_num}"
+            m["channel_id"] = f"beemax{max_num}"
             m["channel"] = f"BEIN MAX {max_num}"
     return matches
 
