@@ -15,7 +15,7 @@
 
 ## Quick Start
 
-Visit: https://bein-sports-streaming.vercel.app
+Visit: https://adam-bein.vercel.app
 
 ### Local Proxy (for lower latency)
 
