@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#07070d"/>
+      <stop offset="50%" style="stop-color:#0d0d1a"/>
+      <stop offset="100%" style="stop-color:#1a1a2e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#e94560"/>
+      <stop offset="50%" style="stop-color:#0f3460"/>
+      <stop offset="100%" style="stop-color:#533483"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- Grid overlay -->
+  <g opacity="0.03">
+    <line x1="0" y1="0" x2="0" y2="630" stroke="#fff" stroke-width="0.5"/>
+    <line x1="60" y1="0" x2="60" y2="630" stroke="#fff" stroke-width="0.5"/>
+    <line x1="120" y1="0" x2="120" y2="630" stroke="#fff" stroke-width="0.5"/>
+    <line x1="0" y1="0" x2="1200" y2="0" stroke="#fff" stroke-width="0.5"/>
+    <line x1="0" y1="60" x2="1200" y2="60" stroke="#fff" stroke-width="0.5"/>
+  </g>
+  <!-- Play button icon -->
+  <rect x="160" y="190" width="140" height="140" rx="40" fill="url(#accent)" opacity="0.9"/>
+  <polygon points="210,230 210,290 260,260" fill="#fff"/>
+  <!-- Title -->
+  <text x="360" y="270" font-family="Cairo, sans-serif" font-size="72" font-weight="900" fill="#f0f0f8">BEIN Streams</text>
+  <text x="360" y="330" font-family="Inter, sans-serif" font-size="32" font-weight="400" fill="#9898b8">بث المباريات مباشر — Live Sports HD</text>
+  <!-- Badges -->
+  <rect x="360" y="370" width="130" height="36" rx="18" fill="rgba(0,212,170,0.15)" stroke="rgba(0,212,170,0.3)" stroke-width="1"/>
+  <text x="425" y="393" font-family="Inter, sans-serif" font-size="16" font-weight="600" fill="#00d4aa" text-anchor="middle">12 قنوات مباشرة</text>
+  <rect x="510" y="370" width="100" height="36" rx="18" fill="rgba(233,69,96,0.15)" stroke="rgba(233,69,96,0.3)" stroke-width="1"/>
+  <text x="560" y="393" font-family="Inter, sans-serif" font-size="16" font-weight="600" fill="#e94560" text-anchor="middle">4 مصادر HD</text>
+  <rect x="630" y="370" width="130" height="36" rx="18" fill="rgba(74,125,255,0.15)" stroke="rgba(74,125,255,0.3)" stroke-width="1"/>
+  <text x="695" y="393" font-family="Inter, sans-serif" font-size="16" font-weight="600" fill="#4a7dff" text-anchor="middle">المباريات مباشر</text>
+  <!-- Channel indicators -->
+  <g transform="translate(200, 460)">
+    <rect x="0" y="0" width="70" height="50" rx="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="35" y="32" font-family="Cairo, sans-serif" font-size="24" font-weight="800" fill="#e94560" text-anchor="middle">1</text>
+    <rect x="80" y="0" width="70" height="50" rx="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="115" y="32" font-family="Cairo, sans-serif" font-size="24" font-weight="800" fill="#e94560" text-anchor="middle">2</text>
+    <rect x="160" y="0" width="70" height="50" rx="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="195" y="32" font-family="Cairo, sans-serif" font-size="24" font-weight="800" fill="#e94560" text-anchor="middle">3</text>
+    <rect x="240" y="0" width="70" height="50" rx="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="275" y="32" font-family="Cairo, sans-serif" font-size="24" font-weight="800" fill="#e94560" text-anchor="middle">4</text>
+    <rect x="320" y="0" width="70" height="50" rx="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="355" y="32" font-family="Cairo, sans-serif" font-size="24" font-weight="800" fill="#e94560" text-anchor="middle">5</text>
+    <rect x="400" y="0" width="70" height="50" rx="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="435" y="32" font-family="Cairo, sans-serif" font-size="24" font-weight="800" fill="#e94560" text-anchor="middle">6</text>
+    <rect x="480" y="0" width="70" height="50" rx="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="515" y="32" font-family="Cairo, sans-serif" font-size="24" font-weight="800" fill="#533483" text-anchor="middle">M1</text>
+    <rect x="560" y="0" width="70" height="50" rx="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="595" y="32" font-family="Cairo, sans-serif" font-size="24" font-weight="800" fill="#533483" text-anchor="middle">M2</text>
+  </g>
+  <!-- URL -->
+  <text x="600" y="570" font-family="Inter, sans-serif" font-size="20" font-weight="400" fill="#6868a0" text-anchor="middle">adam-bein.vercel.app</text>
+  <!-- Gradient line at bottom -->
+  <rect x="0" y="600" width="1200" height="30" fill="url(#accent)" opacity="0.6"/>
+</svg>
